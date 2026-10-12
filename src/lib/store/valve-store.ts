@@ -9,13 +9,19 @@ export interface ValveStoreState {
   currentPhase: 1 | 2 | 3;
   setPhase: (phase: 1 | 2 | 3) => void;
 
-  // ESTADO FASE 1: Filtro y Diagnóstico
+  // ESTADO FASE 1: Filtro y Diagnóstico con Wizard por Pasos
+  phase1Step: number; // 1 a 5
+  setPhase1Step: (step: number) => void;
   filterCriteria: FilterCriteria;
   setFilterCriteria: (criteria: Partial<FilterCriteria>) => void;
   selectedFamily: ValveFamily | null;
   selectFamily: (family: ValveFamily) => void;
 
-  // ESTADO FASE 2: Constructor Modular
+  // ESTADO FASE 2: Constructor Modular con Sub-pasos
+  phase2SubStep: 'CHASIS' | 'SECCIONES' | 'TIRANTES';
+  setPhase2SubStep: (step: 'CHASIS' | 'SECCIONES' | 'TIRANTES') => void;
+  activeSectionIndex: number;
+  setActiveSectionIndex: (index: number) => void;
   inlet: ValveComponent | null;
   sections: SectionConfiguration[];
   endCover: ValveComponent | null;
@@ -46,6 +52,16 @@ export interface ValveStoreState {
 export const useValveStore = create<ValveStoreState>((set, get) => ({
   currentPhase: 1,
   setPhase: (phase) => set({ currentPhase: phase }),
+
+  // Wizard Fase 1
+  phase1Step: 1,
+  setPhase1Step: (step) => set({ phase1Step: step }),
+
+  // Sub-pasos Fase 2
+  phase2SubStep: 'CHASIS',
+  setPhase2SubStep: (step) => set({ phase2SubStep: step }),
+  activeSectionIndex: 0,
+  setActiveSectionIndex: (index) => set({ activeSectionIndex: index }),
 
   // Valores iniciales de diagnóstico hidráulico
   filterCriteria: {
@@ -285,6 +301,9 @@ export const useValveStore = create<ValveStoreState>((set, get) => ({
   resetAll: () =>
     set({
       currentPhase: 1,
+      phase1Step: 1,
+      phase2SubStep: 'CHASIS',
+      activeSectionIndex: 0,
       selectedFamily: null,
       inlet: null,
       sections: [],
