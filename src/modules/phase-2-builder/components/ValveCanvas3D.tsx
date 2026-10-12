@@ -207,17 +207,17 @@ export const ValveCanvas3D: React.FC = () => {
                 {/* Tirante Superior Delantero */}
                 <mesh position={[0, HEIGHT * 0.38, DEPTH * 0.38]} rotation={[0, 0, Math.PI / 2]}>
                   <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.5, 16]} />
-                  <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} />
+                  <meshStandardMaterial color="#F26522" metalness={0.9} roughness={0.1} />
                 </mesh>
                 {/* Tirante Superior Trasero */}
                 <mesh position={[0, HEIGHT * 0.38, -DEPTH * 0.38]} rotation={[0, 0, Math.PI / 2]}>
                   <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.5, 16]} />
-                  <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} />
+                  <meshStandardMaterial color="#F26522" metalness={0.9} roughness={0.1} />
                 </mesh>
                 {/* Tirante Inferior */}
                 <mesh position={[0, -HEIGHT * 0.38, 0]} rotation={[0, 0, Math.PI / 2]}>
                   <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.5, 16]} />
-                  <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} />
+                  <meshStandardMaterial color="#F26522" metalness={0.9} roughness={0.1} />
                 </mesh>
               </group>
             )}

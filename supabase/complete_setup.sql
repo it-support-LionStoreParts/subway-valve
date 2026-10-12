@@ -267,3 +267,76 @@ VALUES
 ('TIE_PVG32_9S', 'DANFOSS_PVG32', 9, '157B8009', 'Kit de Tirantes PVG32 - 9 Secciones', 508.0),
 ('TIE_PVG32_10S', 'DANFOSS_PVG32', 10, '157B8010', 'Kit de Tirantes PVG32 - 10 Secciones', 554.0)
 ON CONFLICT (id) DO NOTHING;
+
+
+-- ==============================================================================
+-- FAMILIA DANFOSS ECO 80 (COREBOOK REV 01)
+-- ==============================================================================
+
+INSERT INTO public.familias_valvula (
+    id, nombre, proveedor, min_gpm, max_gpm, max_psi,
+    supports_load_sensing, supports_open_center, max_work_sections,
+    descripcion, imagen_portada_url
+) VALUES (
+    'DANFOSS_ECO80',
+    'Danfoss ECO 80 Directional Valve',
+    'Danfoss Power Solutions',
+    1.0,
+    26.4,
+    5075,
+    true,
+    true,
+    12,
+    'Válvula de control direccional proporcional modular ECO 80 de Danfoss. Gran versatilidad con módulos mecánicos y electrohidráulicos, reductora de presión de pilotaje integrada (PPRV) y descarga eléctrica (EVPX).',
+    '/images/families/danfoss_eco80.png'
+) ON CONFLICT (id) DO UPDATE SET
+    nombre = EXCLUDED.nombre,
+    max_gpm = EXCLUDED.max_gpm,
+    max_psi = EXCLUDED.max_psi,
+    max_work_sections = EXCLUDED.max_work_sections,
+    descripcion = EXCLUDED.descripcion;
+
+INSERT INTO public.componentes (id, family_id, tipo_modulo, sku, nombre, descripcion, imagen_2d_url, llave_modelo_3d, grosor_mm)
+VALUES
+('ECO80_EVP_LS_PPRV', 'DANFOSS_ECO80', 'INLET', '11173011', 'Módulo de Entrada EVP Bomba Variable con PPRV', 'Entrada para bomba variable Load Sensing con válvula reductora de presión de pilotaje (PPRV) integrada para alimentar actuadores electrohidráulicos.', '/images/components/eco80_evp_pprv.png', 'mesh_eco80_inlet_ls_pprv', 48.0),
+('ECO80_EVP_OC_PPRV', 'DANFOSS_ECO80', 'INLET', '11173010', 'Módulo de Entrada EVP Bomba Fija con PPRV', 'Entrada para bomba fija con bypass de centro abierto y reductora PPRV para pilotaje interno.', '/images/components/eco80_evp_oc.png', 'mesh_eco80_inlet_oc_pprv', 48.0),
+('ECO80_EVP_OC_EVPX', 'DANFOSS_ECO80', 'INLET', '11173000', 'Módulo de Entrada EVP con PPRV y Descarga Eléctrica EVPX', 'Entrada con solenoide de descarga rápida eléctrica (EVPX 12V/24V) de seguridad para despresurizar el circuito.', '/images/components/eco80_evp_evpx.png', 'mesh_eco80_inlet_evpx', 48.0),
+('ECO80_EVP_LS_NOPPRV', 'DANFOSS_ECO80', 'INLET', '11173002', 'Módulo de Entrada EVP Bomba Variable sin PPRV', 'Entrada simplificada sin pilotaje interno para configuraciones 100% mecánicas por palanca.', '/images/components/eco80_evp_noprv.png', 'mesh_eco80_inlet_no_pprv', 48.0),
+('ECO80_EVB_EH_LOW', 'DANFOSS_ECO80', 'WORK_SECTION', '11168507', 'Cuerpo de Trabajo EVB Electrohidráulico (Bajo)', 'Cuerpo de trabajo seccional optimizado para actuadores electrohidráulicos EVM/EVHC.', '/images/components/eco80_evb.png', 'mesh_eco80_work_section', 42.0),
+('ECO80_EVB_MEC_LOW', 'DANFOSS_ECO80', 'WORK_SECTION', '11168504', 'Cuerpo de Trabajo EVB Mecánico (Bajo)', 'Cuerpo de trabajo seccional optimizado para mando mecánico de palanca EVOS.', '/images/components/eco80_evb_mec.png', 'mesh_eco80_work_section_mec', 42.0),
+('ECO80_EVO_STD', 'DANFOSS_ECO80', 'END_COVER', '11191585', 'Tapa de Cierre EVO Estándar Ciega', 'Tapa terminal para cierre físico estanco del bloque seccional.', '/images/components/eco80_evo_std.png', 'mesh_eco80_end_cover', 24.0),
+('ECO80_EVO_LX', 'DANFOSS_ECO80', 'END_COVER', '11191582', 'Tapa de Cierre EVO con Puerto LX (Drenaje Piloto)', 'Tapa terminal con puerto LX integrado para conexión de línea de drenaje o desahogo externo.', '/images/components/eco80_evo_lx.png', 'mesh_eco80_end_cover_lx', 24.0)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.opciones_componente (id, component_id, categoria_opcion, sku_accesorio, nombre_opcion, llave_mesh_adicional)
+VALUES
+('ECO80_ACT_EVM_LEVER', 'ECO80_EVB_EH_LOW', 'ACTUADOR', '11167002', 'Mando EH Proporcional EVM con Palanca Manual', 'mesh_evm_lever'),
+('ECO80_ACT_EVHC_24V', 'ECO80_EVB_EH_LOW', 'ACTUADOR', '11162298', 'Actuador Electrohidráulico EVHC 24Vcc Proporcional', 'mesh_evhc_24v'),
+('ECO80_ACT_EVHCO_24V', 'ECO80_EVB_EH_LOW', 'ACTUADOR', '11186911', 'Actuador Electrohidráulico EVHCO 24Vcc ON/OFF', 'mesh_evhco_24v'),
+('ECO80_ACT_EVOS_LEVER', 'ECO80_EVB_EH_LOW', 'ACTUADOR', '11175314', 'Mando Mecánico EVOS Palanca con Soporte', 'mesh_lever_manual'),
+('ECO80_ACT_EVOS_STD', 'ECO80_EVB_EH_LOW', 'ACTUADOR', '11172533', 'Mando Mecánico EVOS Estándar sin Palanca', 'mesh_lever_base'),
+('ECO80_SPOOL_C_25', 'ECO80_EVB_EH_LOW', 'SPOOL_TIPO', '11170449', 'Carrete 4/3 EH Centro Cerrado (25 LPM - 6.6 GPM)', NULL),
+('ECO80_SPOOL_C_60', 'ECO80_EVB_EH_LOW', 'SPOOL_TIPO', '11170457', 'Carrete 4/3 EH Centro Cerrado (60 LPM - 15.8 GPM)', NULL),
+('ECO80_SPOOL_C_100', 'ECO80_EVB_EH_LOW', 'SPOOL_TIPO', '11182178', 'Carrete 4/3 EH Centro Cerrado (100 LPM - 26.4 GPM)', NULL),
+('ECO80_SPOOL_M_60', 'ECO80_EVB_EH_LOW', 'SPOOL_TIPO', '11134906', 'Carrete 4/3 EH Motor Centro Abierto (60 LPM - 15.8 GPM)', NULL),
+('ECO80_SPOOL_M_100', 'ECO80_EVB_EH_LOW', 'SPOOL_TIPO', '11182177', 'Carrete 4/3 EH Motor Centro Abierto (100 LPM - 26.4 GPM)', NULL),
+('ECO80_SPOOL_EST_80', 'ECO80_EVB_EH_LOW', 'SPOOL_TIPO', '11170459', 'Carrete 4/3 EH Centro Estrangulado (80 LPM - 21.1 GPM)', NULL),
+('ECO80_PORT_SAE10', 'ECO80_EVB_EH_LOW', 'PUERTO', '11335679', 'Puertos Pórtico Rosca 7/8"-14 UNF (SAE #10)', NULL),
+('ECO80_PORT_BSP12', 'ECO80_EVB_EH_LOW', 'PUERTO', 'ADAPT-BSP-12', 'Puertos Pórtico Rosca G 1/2 BSPP', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.kits_tirantes (id, family_id, num_secciones, sku, nombre, longitud_mm)
+VALUES
+('TIE_ECO80_1S', 'DANFOSS_ECO80', 1, '11173102', 'Kit de Tirantes EVAS ECO 80 - 1 Sección', 135.0),
+('TIE_ECO80_2S', 'DANFOSS_ECO80', 2, '11173103', 'Kit de Tirantes EVAS ECO 80 - 2 Secciones', 177.0),
+('TIE_ECO80_3S', 'DANFOSS_ECO80', 3, '11173104', 'Kit de Tirantes EVAS ECO 80 - 3 Secciones', 219.0),
+('TIE_ECO80_4S', 'DANFOSS_ECO80', 4, '11173105', 'Kit de Tirantes EVAS ECO 80 - 4 Secciones', 261.0),
+('TIE_ECO80_5S', 'DANFOSS_ECO80', 5, '11173106', 'Kit de Tirantes EVAS ECO 80 - 5 Secciones', 303.0),
+('TIE_ECO80_6S', 'DANFOSS_ECO80', 6, '11173107', 'Kit de Tirantes EVAS ECO 80 - 6 Secciones', 345.0),
+('TIE_ECO80_7S', 'DANFOSS_ECO80', 7, '11173108', 'Kit de Tirantes EVAS ECO 80 - 7 Secciones', 387.0),
+('TIE_ECO80_8S', 'DANFOSS_ECO80', 8, '11173109', 'Kit de Tirantes EVAS ECO 80 - 8 Secciones', 429.0),
+('TIE_ECO80_9S', 'DANFOSS_ECO80', 9, '11173110', 'Kit de Tirantes EVAS ECO 80 - 9 Secciones', 471.0),
+('TIE_ECO80_10S', 'DANFOSS_ECO80', 10, '11173111', 'Kit de Tirantes EVAS ECO 80 - 10 Secciones', 513.0),
+('TIE_ECO80_11S', 'DANFOSS_ECO80', 11, '11173112', 'Kit de Tirantes EVAS ECO 80 - 11 Secciones', 555.0),
+('TIE_ECO80_12S', 'DANFOSS_ECO80', 12, '11173113', 'Kit de Tirantes EVAS ECO 80 - 12 Secciones', 597.0)
+ON CONFLICT (id) DO NOTHING;

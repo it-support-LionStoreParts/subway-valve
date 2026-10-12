@@ -23,7 +23,7 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
       {/* Cabecera de la sección */}
       <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
         <div className="flex items-center gap-2.5">
-          <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 font-mono text-xs font-bold flex items-center justify-center border border-amber-500/30">
+          <span className="w-6 h-6 rounded-lg bg-[#F26522]/15 text-[#F26522] font-mono text-xs font-bold flex items-center justify-center border border-[#F26522]/30">
             {index + 1}
           </span>
           <div>
