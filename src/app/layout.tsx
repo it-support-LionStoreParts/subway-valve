@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Subway Valve | Lion Store - Configurador Hidráulico",
-  description: "Plataforma interactiva para dimensionar, apilar y cotizar bloques de válvulas hidráulicas en tiempo real.",
+  title: "Subway Valve | Lion Store Parts - Configurador Hidráulico",
+  description: "Configurador interactivo de válvulas hidráulicas modulares.",
 };
 
 export default function RootLayout({
@@ -23,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
+    <html lang="es" className="light">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-amber-500 selection:text-black`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-zinc-50 text-zinc-900 antialiased selection:bg-[#F26522] selection:text-white`}
       >
         {children}
       </body>

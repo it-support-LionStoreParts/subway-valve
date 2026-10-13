@@ -1,175 +1,135 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { useValveStore } from '@/lib/store/valve-store';
+import { translations } from '@/lib/i18n/translations';
 import { Phase1Filter } from '@/modules/phase-1-filter/components/Phase1Filter';
 import { Phase2Builder } from '@/modules/phase-2-builder/components/Phase2Builder';
 import { Phase3Quotation } from '@/modules/phase-3-quotation/components/Phase3Quotation';
-import { Eco80TechnicalModal } from '@/modules/phase-2-builder/components/Eco80TechnicalModal';
-import { LionStoreFloatingBar } from '@/components/LionStoreFloatingBar';
-import {
-  CheckCircle2,
-  ChevronRight,
-  User,
-  Heart,
-  ShoppingCart,
-  ShieldCheck,
-  Search
-} from 'lucide-react';
+import { SplashScreen } from '@/components/SplashScreen';
+import { Globe } from 'lucide-react';
 
 export default function Home() {
-  const { currentPhase, setPhase, selectedFamily } = useValveStore();
-  const [isCoreBookOpen, setIsCoreBookOpen] = useState(false);
+  const { currentPhase, setPhase, selectedFamily, setPhase1Step, language, setLanguage } = useValveStore();
+  const t = translations[language];
 
-  const steps = [
-    { number: 1, title: 'Fase 1: Diagnóstico', desc: 'Filtro por Preguntas' },
-    { number: 2, title: 'Fase 2: Constructor', desc: 'Apilado 2D / 3D' },
-    { number: 3, title: 'Fase 3: Cotización', desc: 'BOM y WhatsApp' }
+  const phases = [
+    { number: 1, label: t.phase1 },
+    { number: 2, label: t.phase2 },
+    { number: 3, label: t.phase3 }
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100 selection:bg-[#F26522] selection:text-white relative">
-      <Eco80TechnicalModal isOpen={isCoreBookOpen} onClose={() => setIsCoreBookOpen(false)} />
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-slate-900 font-sans selection:bg-[#F26522] selection:text-white">
+      {/* Pantalla de Carga Inicial con Animación */}
+      <SplashScreen />
       
-      {/* Barra Flotante Lateral Naranja (Inspirada en Lion Store e-commerce) */}
-      <LionStoreFloatingBar
-        onOpenCoreBook={() => setIsCoreBookOpen(true)}
-        onToggleViewMode={() => {
-          if (currentPhase === 1) setPhase(2);
-        }}
-      />
-
-      {/* Barra Superior de Utilidad (Estilo Lion Store Parts) */}
-      <div className="bg-black border-b border-zinc-900 text-[11px] text-zinc-400 py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-[#F26522] font-semibold font-mono">LION STORE PARTS</span>
-            <span className="text-zinc-600">|</span>
-            <span className="hidden sm:inline">Distribuidor Especializado en Oleohidráulica Móvil e Industrial</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors">
-              <Heart className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">My Wishlist</span>
-            </div>
-            <span className="text-zinc-700">|</span>
-            <div className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors">
-              <ShoppingCart className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Checkout</span>
-            </div>
-            <span className="text-zinc-700">|</span>
-            <div className="flex items-center gap-1.5 text-zinc-200">
-              <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-[9px] text-[#F26522]">
-                <User className="w-3 h-3" />
-              </div>
-              <span className="font-semibold text-white">Welcome Guest</span>
-              <span className="text-zinc-500 hidden md:inline font-mono text-[10px]">(Sign in / Join Free)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Barra de Navegación Principal */}
-      <header className="border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      {/* Header Minimalista y Elegante */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/70 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           
-          {/* Marca / Logotipo Oficial Lion Store Parts */}
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-28 relative flex items-center">
-              <Image
-                src="/images/lion-store-logo.png"
-                alt="Lion Store Parts"
-                width={120}
-                height={40}
-                className="object-contain"
-                priority
-              />
-            </div>
-            <div className="hidden sm:block border-l border-zinc-800 pl-3">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold tracking-tight text-white text-sm">SUBWAY VALVE</span>
-                <span className="text-[10px] bg-[#F26522]/15 text-[#F26522] font-mono font-bold px-1.5 py-0.5 rounded border border-[#F26522]/30">
-                  Configurador
-                </span>
-              </div>
-              <span className="text-[11px] text-zinc-500 block">Danfoss Power Solutions Hub</span>
+          {/* Marca / Logotipo Proporcional y Nítido */}
+          <div
+            onClick={() => {
+              setPhase(1);
+              setPhase1Step(0);
+            }}
+            className="flex items-center gap-3.5 cursor-pointer group select-none"
+            title="Ir al inicio / Go to home"
+          >
+            <Image
+              src="/images/lion-store-logo.png"
+              alt="Lion Store Parts"
+              width={1024}
+              height={791}
+              className="h-9 w-auto object-contain transition-transform group-hover:scale-102"
+              style={{ width: 'auto', height: '36px' }}
+              priority
+            />
+            <div className="hidden sm:flex flex-col border-l border-slate-200 pl-3">
+              <span className="font-semibold text-xs text-slate-900 tracking-tight leading-tight">
+                Subway Valve
+              </span>
+              <span className="text-[10px] text-slate-500 font-normal leading-tight">
+                {t.brandSubtitle}
+              </span>
             </div>
           </div>
 
-          {/* Stepper de Fases Interactivas */}
-          <nav className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-2xl">
-            {steps.map((step, idx) => {
-              const isActive = currentPhase === step.number;
-              const isPast = currentPhase > step.number;
-              const canNavigate = step.number === 1 || (step.number === 2 && selectedFamily !== null);
+          {/* Stepper de Fases y Selector de Idioma */}
+          <div className="flex items-center gap-6">
+            <nav className="flex items-center gap-5 text-xs">
+              {phases.map((p) => {
+                const isActive = currentPhase === p.number;
+                const isPast = currentPhase > p.number;
+                const canClick = p.number === 1 || (p.number === 2 && selectedFamily !== null);
 
-              return (
-                <React.Fragment key={step.number}>
+                return (
                   <button
-                    onClick={() => canNavigate && setPhase(step.number as 1 | 2 | 3)}
-                    disabled={!canNavigate}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    key={p.number}
+                    onClick={() => canClick && setPhase(p.number as 1 | 2 | 3)}
+                    disabled={!canClick}
+                    className={`flex items-center gap-2 py-1 transition-all ${
                       isActive
-                        ? 'bg-[#F26522] text-white shadow-md'
+                        ? 'text-slate-900 font-semibold'
                         : isPast
-                        ? 'text-zinc-300 hover:text-white'
-                        : 'text-zinc-600 cursor-not-allowed'
+                        ? 'text-slate-600 hover:text-slate-900'
+                        : 'text-slate-300 cursor-not-allowed'
                     }`}
                   >
                     <span
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold ${
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
                         isActive
-                          ? 'bg-black text-[#F26522]'
+                          ? 'bg-[#F26522] scale-125'
                           : isPast
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-zinc-800 text-zinc-500'
+                          ? 'bg-slate-400'
+                          : 'bg-slate-200'
                       }`}
-                    >
-                      {isPast ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : step.number}
-                    </span>
-                    <span className="hidden md:inline">{step.title}</span>
+                    />
+                    <span>{p.label}</span>
                   </button>
+                );
+              })}
+            </nav>
 
-                  {idx < steps.length - 1 && (
-                    <ChevronRight className="w-3 h-3 text-zinc-700 hidden md:inline" />
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </nav>
-
-          {/* Indicador de Estado */}
-          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
-            <span className="w-2 h-2 rounded-full bg-[#F26522] animate-pulse"></span>
-            <span className="hidden lg:inline">Supabase Live</span>
+            {/* Selector de Idioma (ES / EN) */}
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-full border border-slate-200/80 text-[11px] font-medium text-slate-600">
+              <button
+                onClick={() => setLanguage('es')}
+                className={`px-2.5 py-0.5 rounded-full transition-all ${
+                  language === 'es'
+                    ? 'bg-white text-slate-950 font-semibold shadow-xs'
+                    : 'hover:text-slate-900'
+                }`}
+              >
+                ES
+              </button>
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-2.5 py-0.5 rounded-full transition-all ${
+                  language === 'en'
+                    ? 'bg-white text-slate-950 font-semibold shadow-xs'
+                    : 'hover:text-slate-900'
+                }`}
+              >
+                EN
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Contenido Principal según la Fase Activa */}
-      <main className="flex-1 pb-20">
+      {/* Contenedor Principal */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8 sm:py-12">
         {currentPhase === 1 && <Phase1Filter />}
         {currentPhase === 2 && <Phase2Builder />}
         {currentPhase === 3 && <Phase3Quotation />}
       </main>
 
-      {/* Pie de Página */}
-      <footer className="border-t border-zinc-800/80 bg-black py-8 text-center text-xs text-zinc-500 space-y-3">
-        <div className="flex items-center justify-center gap-3">
-          <Image
-            src="/images/lion-store-logo.png"
-            alt="Lion Store Parts"
-            width={85}
-            height={30}
-            className="object-contain opacity-80"
-          />
-          <span className="text-zinc-400 font-semibold">• Subway Valve Platform</span>
-        </div>
-        <p className="text-[11px] text-zinc-600 max-w-xl mx-auto">
-          Plataforma de ingeniería de dimensionamiento y ensamblado modular para válvulas Danfoss ECO 80, Danfoss PVG 32 y Sun Hydraulics.
-        </p>
+      {/* Pie de Página Minimalista */}
+      <footer className="border-t border-slate-200/70 bg-white py-6 text-center text-xs text-slate-400 tracking-normal">
+        <p>Lion Store Parts • Subway Valve Engineering Suite</p>
       </footer>
     </div>
   );

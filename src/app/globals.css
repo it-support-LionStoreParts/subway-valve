@@ -1,11 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
 body {
-  background: #09090b;
-  color: #fafafa;
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* CAD & Technical drawing grid background */
+.engineering-grid {
+  background-image: radial-gradient(circle, #cbd5e1 0.75px, transparent 0.75px);
+  background-size: 16px 16px;
 }

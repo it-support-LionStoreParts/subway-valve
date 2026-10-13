@@ -3,19 +3,18 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useValveStore } from '@/lib/store/valve-store';
+import { translations } from '@/lib/i18n/translations';
 import {
   FileText,
-  Send,
   MessageCircle,
   ArrowLeft,
   RotateCcw,
-  CheckCircle,
+  CheckCircle2,
   Copy,
   Building2,
   Mail,
   Phone,
-  User,
-  ShieldCheck
+  User
 } from 'lucide-react';
 
 export const Phase3Quotation: React.FC = () => {
@@ -27,7 +26,8 @@ export const Phase3Quotation: React.FC = () => {
     tieRodKit,
     bomItems,
     setPhase,
-    resetAll
+    resetAll,
+    language
   } = useValveStore();
 
   const [copied, setCopied] = useState(false);
@@ -40,30 +40,35 @@ export const Phase3Quotation: React.FC = () => {
   });
   const [submitted, setSubmitted] = useState(false);
 
-  // Calcular longitud total
+  const t = translations[language];
+  const p3 = t.phase3Content;
+
+  // Longitud total acumulada
   const totalLengthMm =
     (inlet?.grosor_mm || 0) +
     sections.reduce((acc, s) => acc + (s.component.grosor_mm || 0), 0) +
     (endCover?.grosor_mm || 0);
 
-  // Generador de texto para WhatsApp
+  // Formateador de WhatsApp
   const generateWhatsAppMessage = () => {
-    let msg = `*SOLICITUD DE COTIZACIÓN - SUBWAY VALVE | LION STORE PARTS*\n`;
+    let msg = `*${p3.whatsappGreeting}*\n`;
     msg += `------------------------------------\n`;
-    msg += `*Familia:* ${selectedFamily?.nombre || 'Válvula Modular'}\n`;
-    msg += `*Cuerpos de Trabajo:* ${sections.length} secciones\n`;
-    msg += `*Longitud de Ensamble:* ${totalLengthMm.toFixed(1)} mm\n`;
-    if (tieRodKit) msg += `*Kit de Tirantes:* SKU ${tieRodKit.sku} (${tieRodKit.longitud_mm} mm)\n`;
+    msg += `*${language === 'en' ? 'Family:' : 'Familia:'}* ${selectedFamily?.nombre || 'Danfoss'}\n`;
+    msg += `*${language === 'en' ? 'Work Bodies:' : 'Cuerpos de Trabajo:'}* ${sections.length} ${language === 'en' ? 'sections' : 'secciones'}\n`;
+    msg += `*${language === 'en' ? 'Assembly Length:' : 'Longitud Ensamble:'}* ${totalLengthMm.toFixed(1)} mm\n`;
+    if (tieRodKit) {
+      msg += `*${language === 'en' ? 'Tie Rod Kit:' : 'Kit de Tirantes:'}* SKU ${tieRodKit.sku} (${tieRodKit.longitud_mm} mm)\n`;
+    }
     if (formData.nombre) msg += `*Contacto:* ${formData.nombre} (${formData.empresa || 'Particular'})\n`;
-    if (formData.telefono) msg += `*Teléfono:* ${formData.telefono}\n`;
-    msg += `\n*DESGLOSE DE MATERIALES (BOM):*\n`;
+    if (formData.telefono) msg += `*Tel:* ${formData.telefono}\n`;
+    msg += `\n*${p3.title}:*\n`;
 
     bomItems.forEach((item, index) => {
-      msg += `${index + 1}. [${item.sku}] ${item.nombre} (Cant: ${item.cantidad})\n`;
+      msg += `${index + 1}. [${item.sku}] ${item.nombre} (${p3.colQty}: ${item.cantidad})\n`;
     });
 
     if (formData.comentarios) {
-      msg += `\n*Notas Técnicas:* ${formData.comentarios}\n`;
+      msg += `\n*Notas:* ${formData.comentarios}\n`;
     }
 
     return encodeURIComponent(msg);
@@ -71,7 +76,7 @@ export const Phase3Quotation: React.FC = () => {
 
   const handleCopyBOM = () => {
     const text = bomItems
-      .map((item, idx) => `${idx + 1}. SKU: ${item.sku} | ${item.nombre} | Cant: ${item.cantidad}`)
+      .map((item, idx) => `${idx + 1}. SKU: ${item.sku} | ${item.nombre} | ${p3.colQty}: ${item.cantidad}`)
       .join('\n');
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -84,68 +89,74 @@ export const Phase3Quotation: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F26522]/15 text-[#F26522] border border-[#F26522]/30 rounded-full text-xs font-semibold uppercase tracking-wider">
-            Fase 3: Salida Comercial • Lion Store Parts
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Desglose de Materiales (BOM) y Cotización
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 border-b border-slate-200/70 pb-5">
+        <div>
+          <span className="text-xs uppercase tracking-wider text-[#F26522] font-semibold block">
+            {language === 'en' ? 'Phase 03 • Commercial Quote' : 'Fase 03 • Salida Comercial'}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-light text-slate-900 tracking-tight mt-0.5">
+            {p3.title}
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => setPhase(2)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 text-xs font-semibold transition-all"
+            className="text-slate-500 hover:text-slate-800 text-xs font-medium transition-colors flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Volver al Constructor
+            <span>{p3.modifyBtn}</span>
           </button>
 
           <button
             onClick={resetAll}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-800 text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-all"
+            className="text-slate-500 hover:text-rose-600 text-xs font-medium transition-colors flex items-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            Nueva Configuración
+            <span>{p3.newConfigBtn}</span>
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Tabla BOM (Izquierda / Central) */}
-        <div className="lg:col-span-7 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-5">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-[0_2px_20px_rgba(0,0,0,0.03)] space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
               <FileText className="w-4 h-4 text-[#F26522]" />
-              Lista Oficial de Partes (Bill of Materials)
+              <span>{p3.title}</span>
             </h2>
 
             <button
               onClick={handleCopyBOM}
-              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-[#F26522] bg-zinc-950 px-3 py-1.5 rounded-lg border border-zinc-800 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-[#F26522] bg-slate-50 px-3.5 py-1.5 rounded-full border border-slate-200/80 hover:bg-slate-100 transition-colors font-medium"
             >
-              {copied ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copiado al Portapapeles' : 'Copiar SKUs'}
+              {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? (language === 'en' ? 'Copied' : 'Copiado al Portapapeles') : (language === 'en' ? 'Copy SKUs' : 'Copiar SKUs')}</span>
             </button>
           </div>
 
           {/* Resumen Superior */}
-          <div className="grid grid-cols-3 gap-3 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800/80 text-xs">
+          <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/70 text-xs">
             <div>
-              <span className="text-zinc-500 block">Familia:</span>
-              <span className="text-white font-medium">{selectedFamily?.nombre}</span>
+              <span className="text-[10px] uppercase text-slate-400 font-medium block">
+                {language === 'en' ? 'Family' : 'Familia'}
+              </span>
+              <span className="text-slate-900 font-semibold">{selectedFamily?.nombre}</span>
             </div>
             <div>
-              <span className="text-zinc-500 block">Secciones de Trabajo:</span>
-              <span className="text-[#F26522] font-mono font-bold">{sections.length} cuerpos</span>
+              <span className="text-[10px] uppercase text-slate-400 font-medium block">
+                {language === 'en' ? 'Bodies' : 'Cuerpos'}
+              </span>
+              <span className="text-[#F26522] font-semibold">{sections.length} {language === 'en' ? 'sections' : 'secciones'}</span>
             </div>
             <div>
-              <span className="text-zinc-500 block">Longitud Total:</span>
-              <span className="text-emerald-400 font-mono font-bold">{totalLengthMm.toFixed(1)} mm</span>
+              <span className="text-[10px] uppercase text-slate-400 font-medium block">
+                {language === 'en' ? 'Length' : 'Longitud'}
+              </span>
+              <span className="text-emerald-700 font-semibold">{totalLengthMm.toFixed(1)} mm</span>
             </div>
           </div>
 
@@ -153,24 +164,24 @@ export const Phase3Quotation: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-500 font-medium">
-                  <th className="pb-2">SKU</th>
-                  <th className="pb-2">Descripción del Componente</th>
-                  <th className="pb-2">Categoría</th>
-                  <th className="pb-2 text-right">Cant.</th>
+                <tr className="border-b border-slate-100 text-[11px] uppercase tracking-wider text-slate-400 font-medium">
+                  <th className="pb-3">{p3.colSku}</th>
+                  <th className="pb-3">{p3.colDesc}</th>
+                  <th className="pb-3">{p3.colType}</th>
+                  <th className="pb-3 text-right">{p3.colQty}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60 font-mono">
+              <tbody className="divide-y divide-slate-100">
                 {bomItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-zinc-800/30">
-                    <td className="py-2.5 font-bold text-[#F26522] pr-2">{item.sku}</td>
-                    <td className="py-2.5 text-zinc-200 pr-2 font-sans">{item.nombre}</td>
-                    <td className="py-2.5 pr-2">
-                      <span className="bg-zinc-800 px-2 py-0.5 rounded text-[10px] text-zinc-400 font-sans">
+                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3 font-semibold text-[#F26522] pr-2">{item.sku}</td>
+                    <td className="py-3 text-slate-800 pr-2 font-medium">{item.nombre}</td>
+                    <td className="py-3 pr-2 text-slate-500">
+                      <span className="text-[11px] bg-slate-100 px-2 py-0.5 rounded-full">
                         {item.categoria}
                       </span>
                     </td>
-                    <td className="py-2.5 text-right font-bold text-white">{item.cantidad}</td>
+                    <td className="py-3 text-right font-semibold text-slate-900">{item.cantidad}</td>
                   </tr>
                 ))}
               </tbody>
@@ -179,75 +190,80 @@ export const Phase3Quotation: React.FC = () => {
         </div>
 
         {/* Formulario Comercial y Envío Directo (Derecha) */}
-        <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 relative shrink-0">
-                <Image
-                  src="/images/lion-store-logo.png"
-                  alt="Lion Store Parts"
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-              <h2 className="text-base font-bold text-white">Canal Comercial Lion Store</h2>
+        <div className="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-[0_2px_20px_rgba(0,0,0,0.03)] space-y-6">
+          <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/images/lion-store-logo.png"
+                alt="Lion Store Parts"
+                width={1024}
+                height={791}
+                className="h-6 w-auto object-contain"
+                style={{ width: 'auto', height: '24px' }}
+              />
+              <h2 className="text-base font-semibold text-slate-900">
+                {language === 'en' ? 'Lion Store Quotation' : 'Cotización Lion Store'}
+              </h2>
             </div>
-            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">
-              Venta Directa
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full font-medium">
+              {language === 'en' ? 'Technical Support' : 'Asistencia Técnica'}
             </span>
           </div>
 
           {submitted ? (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-5 text-center space-y-3">
-              <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto" />
-              <h3 className="text-sm font-bold text-white">¡Solicitud Registrada con Éxito!</h3>
-              <p className="text-xs text-zinc-300">
-                Un asesor técnico de Lion Store revisará tu ensamble {selectedFamily?.nombre} y te enviará la cotización formal a tu correo.
+            <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-6 text-center space-y-3">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+              <h3 className="text-sm font-semibold text-emerald-950">
+                {language === 'en' ? 'Quote Request Received!' : '¡Solicitud Registrada!'}
+              </h3>
+              <p className="text-xs text-emerald-800 leading-relaxed">
+                {language === 'en'
+                  ? `A technical specialist from Lion Store Parts will review your ${selectedFamily?.nombre} assembly and send the formal quote.`
+                  : `Un asesor especializado de Lion Store Parts revisará tu bloque ${selectedFamily?.nombre} y te enviará la cotización formal por correo.`}
               </p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="text-xs text-emerald-400 underline pt-2 block mx-auto"
+                className="text-xs text-emerald-700 font-medium underline pt-2 block mx-auto"
               >
-                Enviar otra solicitud
+                {language === 'en' ? 'Send another request' : 'Enviar otra solicitud'}
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmitLead} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-zinc-400" />
-                  Nombre Completo *
+              <div className="space-y-1.5">
+                <label className="text-slate-600 font-medium flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{language === 'en' ? 'Full Name *' : 'Nombre Completo *'}</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  placeholder="ej. Carlos Mendoza"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F26522]"
+                  placeholder={language === 'en' ? 'e.g. Carlos Mendoza' : 'ej. Carlos Mendoza'}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] transition-all"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-zinc-400" />
-                  Empresa o Taller
+              <div className="space-y-1.5">
+                <label className="text-slate-600 font-medium flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{language === 'en' ? 'Company or Workshop' : 'Empresa o Taller'}</span>
                 </label>
                 <input
                   type="text"
                   value={formData.empresa}
                   onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
-                  placeholder="ej. Maquinaria del Norte"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F26522]"
+                  placeholder={language === 'en' ? 'e.g. Machinery Corp' : 'ej. Maquinaria del Norte'}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-zinc-400" />
-                    Correo Electrónico *
+                <div className="space-y-1.5">
+                  <label className="text-slate-600 font-medium flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{language === 'en' ? 'Email *' : 'Correo *'}</span>
                   </label>
                   <input
                     type="email"
@@ -255,14 +271,14 @@ export const Phase3Quotation: React.FC = () => {
                     value={formData.correo}
                     onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
                     placeholder="carlos@empresa.com"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F26522]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] transition-all"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-zinc-400" />
-                    Teléfono / WhatsApp *
+                <div className="space-y-1.5">
+                  <label className="text-slate-600 font-medium flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{language === 'en' ? 'Phone *' : 'Teléfono *'}</span>
                   </label>
                   <input
                     type="tel"
@@ -270,39 +286,41 @@ export const Phase3Quotation: React.FC = () => {
                     value={formData.telefono}
                     onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                     placeholder="+52 ..."
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F26522]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] transition-all"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-zinc-400 font-medium block">Notas Técnicas o Conectores</label>
+              <div className="space-y-1.5">
+                <label className="text-slate-600 font-medium block">
+                  {language === 'en' ? 'Notes or Special Requirements' : 'Notas o Requerimientos Especiales'}
+                </label>
                 <textarea
                   rows={2}
                   value={formData.comentarios}
                   onChange={(e) => setFormData({ ...formData, comentarios: e.target.value })}
-                  placeholder="ej. Indicar si se requieren bobinas 12Vcc o 24Vcc y conectores Hirschmann..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F26522] resize-none"
+                  placeholder={language === 'en' ? 'e.g. 12V or 24V coils, AMP / Deutsch connector...' : 'ej. Voltaje de bobinas (12Vcc o 24Vcc), tipo de conector...'}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] resize-none transition-all"
                 />
               </div>
 
-              {/* Botón Principal: WhatsApp con Logo */}
+              {/* Botón Principal: WhatsApp */}
               <a
                 href={`https://wa.me/?text=${generateWhatsAppMessage()}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full bg-[#F26522] hover:bg-[#EA580C] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-[#F26522]/20 text-xs"
+                className="w-full bg-[#F26522] hover:bg-[#E05312] text-white font-medium py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all shadow-sm text-xs"
               >
                 <MessageCircle className="w-4 h-4" />
-                Enviar Cotización por WhatsApp a Lion Store
+                <span>{p3.whatsappBtn}</span>
               </a>
 
-              {/* Envío Interno */}
+              {/* Envío Interno CRM */}
               <button
                 type="submit"
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold py-2.5 px-4 rounded-xl border border-zinc-700 transition-all text-xs"
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-full transition-all text-xs"
               >
-                Registrar Solicitud en Sistema CRM
+                {language === 'en' ? 'Submit to Technical Sales Team' : 'Registrar Solicitud en Sistema CRM'}
               </button>
             </form>
           )}

@@ -2,11 +2,9 @@
 
 import React, { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, Html } from '@react-three/drei';
+import { OrbitControls, Grid, Html } from '@react-three/drei';
 import { useValveStore } from '@/lib/store/valve-store';
-import { SectionConfiguration, ValveComponent } from '@/types/component';
 
-// Subcomponente 3D para una rebanada física individual
 interface SliceProps {
   position: [number, number, number];
   width: number;
@@ -30,56 +28,53 @@ const ValveSlice3D: React.FC<SliceProps> = ({
 }) => {
   return (
     <group position={position}>
-      {/* Cuerpo principal del bloque hidráulico (corte mecanizado) */}
+      {/* Cuerpo principal del bloque */}
       <mesh castShadow receiveShadow>
         <boxGeometry args={[width, height, depth]} />
         <meshStandardMaterial
           color={color}
-          metalness={0.8}
-          roughness={0.25}
-          envMapIntensity={1.2}
+          metalness={0.7}
+          roughness={0.3}
         />
       </mesh>
 
-      {/* Biseles y orificios de fijación superiores */}
+      {/* Bisel superior */}
       <mesh position={[0, height / 2 + 0.05, 0]}>
         <boxGeometry args={[width * 0.9, 0.08, depth * 0.8]} />
-        <meshStandardMaterial color="#27272a" metalness={0.9} roughness={0.3} />
+        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
       </mesh>
 
-      {/* Si es sección de trabajo: puertos A y B frontales y actuador superior */}
+      {/* Puertos y actuadores si es sección de trabajo */}
       {isWorkSection && (
         <>
           {/* Puerto A */}
           <mesh position={[-width * 0.22, 0.1, depth / 2 + 0.06]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.18, 0.18, 0.12, 16]} />
-            <meshStandardMaterial color="#10b981" metalness={0.7} roughness={0.3} />
+            <meshStandardMaterial color="#059669" metalness={0.6} roughness={0.3} />
           </mesh>
 
           {/* Puerto B */}
           <mesh position={[width * 0.22, 0.1, depth / 2 + 0.06]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.18, 0.18, 0.12, 16]} />
-            <meshStandardMaterial color="#10b981" metalness={0.7} roughness={0.3} />
+            <meshStandardMaterial color="#059669" metalness={0.6} roughness={0.3} />
           </mesh>
 
-          {/* Actuador: Palanca manual o Solenoide Eléctrico */}
+          {/* Actuador */}
           {hasLever ? (
-            // Palanca manual
             <group position={[0, height / 2 + 0.5, 0]}>
               <mesh position={[0, 0, 0]}>
                 <cylinderGeometry args={[0.04, 0.04, 0.9, 12]} />
-                <meshStandardMaterial color="#94a3b8" metalness={0.9} roughness={0.2} />
+                <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.2} />
               </mesh>
               <mesh position={[0, 0.45, 0]}>
                 <sphereGeometry args={[0.1, 16, 16]} />
-                <meshStandardMaterial color="#0f172a" roughness={0.6} />
+                <meshStandardMaterial color="#1e293b" roughness={0.6} />
               </mesh>
             </group>
           ) : (
-            // Caja de mando eléctrico PVE
             <mesh position={[0, height / 2 + 0.35, 0]}>
               <boxGeometry args={[width * 0.85, 0.6, depth * 0.65]} />
-              <meshStandardMaterial color="#1e3a8a" metalness={0.5} roughness={0.4} />
+              <meshStandardMaterial color="#2563eb" metalness={0.4} roughness={0.5} />
             </mesh>
           )}
         </>
@@ -87,7 +82,7 @@ const ValveSlice3D: React.FC<SliceProps> = ({
 
       {/* Etiqueta flotante */}
       <Html position={[0, -height / 2 - 0.25, 0]} center distanceFactor={12}>
-        <div className="bg-zinc-950/90 border border-zinc-700/80 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold text-zinc-300 pointer-events-none whitespace-nowrap shadow-md">
+        <div className="bg-white/95 border border-zinc-300 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold text-zinc-800 pointer-events-none whitespace-nowrap shadow-xs">
           {label}
         </div>
       </Html>
@@ -96,14 +91,17 @@ const ValveSlice3D: React.FC<SliceProps> = ({
 };
 
 export const ValveCanvas3D: React.FC = () => {
-  const { inlet, sections, endCover, tieRodKit } = useValveStore();
+  const { inlet, sections, endCover, tieRodKit, language } = useValveStore();
 
-  // Escalar los grosores en mm a unidades 3D de Three.js (factor 1 mm = 0.04 unidades)
+  const totalLengthMm =
+    (inlet?.grosor_mm || 0) +
+    sections.reduce((acc, s) => acc + (s.component.grosor_mm || 0), 0) +
+    (endCover?.grosor_mm || 0);
+
   const SCALE = 0.035;
   const HEIGHT = 3.0;
   const DEPTH = 2.4;
 
-  // Cálculo procedural de las posiciones X relativas de cada rebanada apilada
   const slicesData = useMemo(() => {
     let currentX = 0;
     const slices: Array<{
@@ -116,49 +114,54 @@ export const ValveCanvas3D: React.FC = () => {
       hasLever?: boolean;
     }> = [];
 
-    // 1. Inlet
+    // Inlet
     if (inlet) {
       const w = inlet.grosor_mm * SCALE;
       slices.push({
         id: 'inlet',
-        label: 'PVP INLET',
+        label: 'INLET',
         width: w,
         x: currentX + w / 2,
-        color: '#475569'
+        color: '#64748b'
       });
       currentX += w;
     }
 
-    // 2. Secciones de trabajo
+    // Secciones
     sections.forEach((sec, idx) => {
       const w = sec.component.grosor_mm * SCALE;
-      const isManual = sec.selectedActuator?.sku_accesorio.includes('3171');
+      const isManual = Boolean(
+        sec.selectedActuator?.sku_accesorio &&
+          (sec.selectedActuator.sku_accesorio.includes('3171') ||
+            sec.selectedActuator.sku_accesorio.includes('11175314') ||
+            sec.selectedActuator.sku_accesorio.includes('11172533'))
+      );
+
       slices.push({
         id: sec.id,
-        label: `PVB #${idx + 1}`,
+        label: `#${idx + 1}`,
         width: w,
         x: currentX + w / 2,
-        color: '#334155',
+        color: '#475569',
         isWorkSection: true,
         hasLever: isManual
       });
       currentX += w;
     });
 
-    // 3. End Cover
+    // End Cover
     if (endCover) {
       const w = endCover.grosor_mm * SCALE;
       slices.push({
         id: 'cover',
-        label: 'PVS END',
+        label: 'END',
         width: w,
         x: currentX + w / 2,
-        color: '#475569'
+        color: '#64748b'
       });
       currentX += w;
     }
 
-    // Centrar todo el bloque en el eje X de Three.js
     const totalWidth = currentX;
     const offsetX = totalWidth / 2;
 
@@ -169,11 +172,23 @@ export const ValveCanvas3D: React.FC = () => {
   }, [inlet, sections, endCover]);
 
   return (
-    <div className="w-full h-[380px] bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 rounded-2xl border border-zinc-800 overflow-hidden relative shadow-2xl">
-      {/* Controles de Vista flotantes */}
-      <div className="absolute top-4 left-4 z-10 bg-zinc-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-700/60 text-xs text-zinc-300 font-mono flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        Render 3D en Tiempo Real (Rotar / Zoom)
+    <div className="w-full h-[380px] bg-slate-50 rounded-3xl border border-slate-200/80 overflow-hidden relative shadow-[0_2px_20px_rgba(0,0,0,0.03)]">
+      <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/80 text-xs text-slate-700 flex items-center gap-2 shadow-xs">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span className="font-medium">{language === 'en' ? '3D Studio (Orbit • Zoom)' : 'Estudio 3D (Rotar • Zoom)'}</span>
+      </div>
+
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 text-xs">
+        <div className="bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/80 text-slate-700 shadow-xs">
+          <span>{language === 'en' ? 'Total Length:' : 'Cota Total:'} </span>
+          <strong className="text-slate-900 font-semibold">{totalLengthMm.toFixed(1)} mm</strong>
+        </div>
+        {tieRodKit && (
+          <div className="bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#F26522]/30 text-[#F26522] shadow-xs">
+            <span>{language === 'en' ? 'Tie Rods:' : 'Tirantes:'} </span>
+            <strong className="font-semibold">{tieRodKit.longitud_mm} mm</strong>
+          </div>
+        )}
       </div>
 
       <Canvas
@@ -181,9 +196,10 @@ export const ValveCanvas3D: React.FC = () => {
         shadows
         className="w-full h-full cursor-grab active:cursor-grabbing"
       >
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[10, 15, 10]} intensity={1.5} castShadow shadow-mapSize={1024} />
-        <directionalLight position={[-10, 10, -5]} intensity={0.8} />
+        <color attach="background" args={['#f8fafc']} />
+        <ambientLight intensity={1.1} />
+        <directionalLight position={[10, 15, 10]} intensity={1.4} castShadow shadow-mapSize={1024} />
+        <directionalLight position={[-10, 10, -5]} intensity={0.6} />
 
         <Suspense fallback={null}>
           <group position={[0, 0, 0]}>
@@ -201,22 +217,19 @@ export const ValveCanvas3D: React.FC = () => {
               />
             ))}
 
-            {/* Tirantes 3D que atraviesan todo el bloque */}
+            {/* Tirantes 3D en Naranja Lion Store */}
             {tieRodKit && (
               <group position={[0, 0, 0]}>
-                {/* Tirante Superior Delantero */}
                 <mesh position={[0, HEIGHT * 0.38, DEPTH * 0.38]} rotation={[0, 0, Math.PI / 2]}>
-                  <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.5, 16]} />
+                  <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.4, 16]} />
                   <meshStandardMaterial color="#F26522" metalness={0.9} roughness={0.1} />
                 </mesh>
-                {/* Tirante Superior Trasero */}
                 <mesh position={[0, HEIGHT * 0.38, -DEPTH * 0.38]} rotation={[0, 0, Math.PI / 2]}>
-                  <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.5, 16]} />
+                  <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.4, 16]} />
                   <meshStandardMaterial color="#F26522" metalness={0.9} roughness={0.1} />
                 </mesh>
-                {/* Tirante Inferior */}
                 <mesh position={[0, -HEIGHT * 0.38, 0]} rotation={[0, 0, Math.PI / 2]}>
-                  <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.5, 16]} />
+                  <cylinderGeometry args={[0.04, 0.04, slicesData.totalWidth + 0.4, 16]} />
                   <meshStandardMaterial color="#F26522" metalness={0.9} roughness={0.1} />
                 </mesh>
               </group>
@@ -232,8 +245,8 @@ export const ValveCanvas3D: React.FC = () => {
             sectionSize={2}
             sectionThickness={1}
             fadeDistance={25}
-            cellColor="#27272a"
-            sectionColor="#3f3f46"
+            cellColor="#cbd5e1"
+            sectionColor="#94a3b8"
           />
 
           <OrbitControls

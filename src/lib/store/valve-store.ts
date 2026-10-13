@@ -3,8 +3,13 @@ import { ValveFamily, FilterCriteria } from '@/types/valve-family';
 import { ValveComponent, ComponentOption, SectionConfiguration, TieRodKit } from '@/types/component';
 import { BOMItem } from '@/types/assembly';
 import { CatalogService } from '@/lib/services/catalog-service';
+import { Language } from '@/lib/i18n/translations';
 
 export interface ValveStoreState {
+  // Idioma
+  language: Language;
+  setLanguage: (lang: Language) => void;
+
   // Navegación por Fases (1: Filtro, 2: Constructor, 3: Cotizador)
   currentPhase: 1 | 2 | 3;
   setPhase: (phase: 1 | 2 | 3) => void;
@@ -35,6 +40,7 @@ export interface ValveStoreState {
   setInlet: (inlet: ValveComponent) => void;
   setEndCover: (endCover: ValveComponent) => void;
   addSection: () => void;
+  duplicateSection: (sectionId: string) => Promise<void>;
   removeSection: (sectionId: string) => void;
   updateSectionOption: (
     sectionId: string,
@@ -50,11 +56,14 @@ export interface ValveStoreState {
 }
 
 export const useValveStore = create<ValveStoreState>((set, get) => ({
+  language: 'es',
+  setLanguage: (lang) => set({ language: lang }),
+
   currentPhase: 1,
   setPhase: (phase) => set({ currentPhase: phase }),
 
-  // Wizard Fase 1
-  phase1Step: 1,
+  // Wizard Fase 1 (0: Bienvenida, 1-4: Preguntas, 5: Recomendación)
+  phase1Step: 0,
   setPhase1Step: (step) => set({ phase1Step: step }),
 
   // Sub-pasos Fase 2
@@ -171,7 +180,42 @@ export const useValveStore = create<ValveStoreState>((set, get) => ({
 
     set({
       sections: newSections,
-      tieRodKit: newTieRod
+      tieRodKit: newTieRod,
+      activeSectionIndex: newSections.length - 1
+    });
+  },
+
+  duplicateSection: async (sectionId: string) => {
+    const { selectedFamily, sections, language } = get();
+    if (!selectedFamily) return;
+
+    if (sections.length >= selectedFamily.max_work_sections) {
+      alert(
+        language === 'en'
+          ? `Family ${selectedFamily.nombre} supports a maximum of ${selectedFamily.max_work_sections} sections.`
+          : `La familia ${selectedFamily.nombre} admite un máximo de ${selectedFamily.max_work_sections} secciones.`
+      );
+      return;
+    }
+
+    const targetIndex = sections.findIndex((s) => s.id === sectionId);
+    if (targetIndex === -1) return;
+    const target = sections[targetIndex];
+
+    const duplicated: SectionConfiguration = {
+      ...target,
+      id: `sec-${Date.now()}-${sections.length + 1}`
+    };
+
+    const newSections = [...sections];
+    newSections.splice(targetIndex + 1, 0, duplicated);
+
+    const newTieRod = await CatalogService.getTieRodKit(selectedFamily.id, newSections.length);
+
+    set({
+      sections: newSections,
+      tieRodKit: newTieRod,
+      activeSectionIndex: targetIndex + 1
     });
   },
 
@@ -301,7 +345,7 @@ export const useValveStore = create<ValveStoreState>((set, get) => ({
   resetAll: () =>
     set({
       currentPhase: 1,
-      phase1Step: 1,
+      phase1Step: 0,
       phase2SubStep: 'CHASIS',
       activeSectionIndex: 0,
       selectedFamily: null,

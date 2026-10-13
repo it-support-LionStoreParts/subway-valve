@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useValveStore } from '@/lib/store/valve-store';
-import { SectionConfiguration, ComponentOption } from '@/types/component';
-import { Trash2, Settings, Zap, Compass, CircleDot } from 'lucide-react';
+import { translations } from '@/lib/i18n/translations';
+import { SectionConfiguration } from '@/types/component';
+import { Trash2, Copy, Zap, Compass, CircleDot } from 'lucide-react';
 
 interface Props {
   section: SectionConfiguration;
@@ -11,7 +12,20 @@ interface Props {
 }
 
 export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => {
-  const { availableOptions, updateSectionOption, removeSection, sections } = useValveStore();
+  const {
+    availableOptions,
+    updateSectionOption,
+    removeSection,
+    duplicateSection,
+    sections,
+    selectedFamily,
+    language
+  } = useValveStore();
+
+  const t = translations[language];
+  const p2 = t.phase2Content;
+  const maxSections = selectedFamily?.max_work_sections || 8;
+  const canAddMore = sections.length < maxSections;
 
   const options = availableOptions[section.componentId] || [];
   const actuators = options.filter((o) => o.categoria_opcion === 'ACTUADOR');
@@ -19,37 +33,56 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
   const ports = options.filter((o) => o.categoria_opcion === 'PUERTO');
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4 transition-all hover:border-zinc-700">
+    <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-5">
+      
       {/* Cabecera de la sección */}
-      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="w-6 h-6 rounded-lg bg-[#F26522]/15 text-[#F26522] font-mono text-xs font-bold flex items-center justify-center border border-[#F26522]/30">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+        <div className="flex items-center gap-3">
+          <span className="w-7 h-7 rounded-full bg-slate-900 text-white text-xs font-semibold flex items-center justify-center">
             {index + 1}
           </span>
           <div>
-            <h4 className="text-sm font-bold text-white">Cuerpo #{index + 1}: {section.component.nombre}</h4>
-            <span className="text-[11px] font-mono text-zinc-400">SKU Base: {section.component.sku} ({section.component.grosor_mm} mm)</span>
+            <h4 className="text-sm font-semibold text-slate-900 tracking-tight">
+              {p2.sectionNumber.replace('{num}', String(index + 1))}: {section.component.nombre}
+            </h4>
+            <span className="text-xs text-slate-400 font-medium">
+              SKU {section.component.sku} • {section.component.grosor_mm} mm
+            </span>
           </div>
         </div>
 
-        {sections.length > 1 && (
+        <div className="flex items-center gap-1.5">
+          {/* Botón Duplicar Sección */}
           <button
-            onClick={() => removeSection(section.id)}
-            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-            title="Eliminar Sección"
+            onClick={() => duplicateSection(section.id)}
+            disabled={!canAddMore}
+            className="p-2 text-slate-400 hover:text-[#F26522] hover:bg-[#F26522]/10 rounded-xl transition-all disabled:opacity-30"
+            title={p2.duplicateSection}
           >
-            <Trash2 className="w-4 h-4" />
+            <Copy className="w-4 h-4" />
           </button>
-        )}
+
+          {/* Botón Eliminar Sección */}
+          {sections.length > 1 && (
+            <button
+              onClick={() => removeSection(section.id)}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+              title={p2.deleteSection}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Controles de Selección */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+        
         {/* 1. Mando / Actuador */}
         <div className="space-y-1.5">
-          <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-blue-400" />
-            Tipo de Mando
+          <label className="text-slate-600 font-medium flex items-center gap-1.5 text-xs">
+            <Zap className="w-3.5 h-3.5 text-[#F26522]" />
+            <span>{p2.actuatorLabel}</span>
           </label>
           <select
             value={section.selectedActuator?.id || ''}
@@ -57,7 +90,7 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
               const opt = actuators.find((a) => a.id === e.target.value);
               if (opt) updateSectionOption(section.id, 'ACTUADOR', opt);
             }}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono text-xs"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] text-xs font-normal transition-all"
           >
             {actuators.map((act) => (
               <option key={act.id} value={act.id}>
@@ -69,9 +102,9 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
 
         {/* 2. Carrete / Spool */}
         <div className="space-y-1.5">
-          <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-            <Compass className="w-3.5 h-3.5 text-amber-400" />
-            Carrete (Spool)
+          <label className="text-slate-600 font-medium flex items-center gap-1.5 text-xs">
+            <Compass className="w-3.5 h-3.5 text-slate-600" />
+            <span>{p2.spoolLabel}</span>
           </label>
           <select
             value={section.selectedSpool?.id || ''}
@@ -79,7 +112,7 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
               const opt = spools.find((s) => s.id === e.target.value);
               if (opt) updateSectionOption(section.id, 'SPOOL_TIPO', opt);
             }}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono text-xs"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] text-xs font-normal transition-all"
           >
             {spools.map((spool) => (
               <option key={spool.id} value={spool.id}>
@@ -89,11 +122,11 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
           </select>
         </div>
 
-        {/* 3. Puertos A y B */}
+        {/* 3. Puertos */}
         <div className="space-y-1.5">
-          <label className="text-zinc-400 font-medium flex items-center gap-1.5">
-            <CircleDot className="w-3.5 h-3.5 text-emerald-400" />
-            Roscas / Puertos
+          <label className="text-slate-600 font-medium flex items-center gap-1.5 text-xs">
+            <CircleDot className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{p2.portLabel}</span>
           </label>
           <select
             value={section.selectedPort?.id || ''}
@@ -101,7 +134,7 @@ export const SectionItemConfigurator: React.FC<Props> = ({ section, index }) => 
               const opt = ports.find((p) => p.id === e.target.value);
               if (opt) updateSectionOption(section.id, 'PUERTO', opt);
             }}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono text-xs"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] text-xs font-normal transition-all"
           >
             {ports.map((port) => (
               <option key={port.id} value={port.id}>
